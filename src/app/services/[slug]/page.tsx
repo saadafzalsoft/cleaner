@@ -24,7 +24,9 @@ export async function generateMetadata({ params }: ServiceSlugProps): Promise<Me
 
 export async function generateStaticParams() {
   const services = await getPublicServices();
-  return services.map((s: any) => ({ slug: s.slug }));
+  return services
+    .filter((s: any) => typeof s?.slug === 'string' && s.slug.length > 0)
+    .map((s: any) => ({ slug: s.slug }));
 }
 
 export default async function IndividualServicePage({ params }: ServiceSlugProps) {
@@ -35,6 +37,10 @@ export default async function IndividualServicePage({ params }: ServiceSlugProps
   if (!service) {
     notFound();
   }
+
+  const differentiators: string[] = Array.isArray(service.differentiators) ? service.differentiators : [];
+  const processSteps: { title: string; desc: string }[] = Array.isArray(service.processSteps) ? service.processSteps : [];
+  const pricingNotes: string[] = Array.isArray(service.pricingNotes) ? service.pricingNotes : [];
 
   // Pick 4 real photos from GALLERY_IMAGES to display in the new On The Job section
   const samplePhotos = GALLERY_IMAGES.slice(0, 4);
@@ -116,54 +122,60 @@ export default async function IndividualServicePage({ params }: ServiceSlugProps
             </div>
 
             {/* Why Choose Us Section */}
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-sky-100 shadow-xs space-y-4">
-              <h3 className="text-xl font-black text-slate-900">Why Canberra Households Choose Us For {service.name}</h3>
-              <div className="grid sm:grid-cols-2 gap-3">
-                {service.differentiators.map((diff, i) => (
-                  <div key={i} className="flex items-start gap-2 text-xs font-bold text-slate-800 bg-[#f8fafc] p-3.5 rounded-2xl border border-sky-100">
-                    <CheckCircle2 className="w-4 h-4 text-[#0284c7] flex-shrink-0 mt-0.5" />
-                    <span>{diff}</span>
-                  </div>
-                ))}
+            {differentiators.length > 0 && (
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-sky-100 shadow-xs space-y-4">
+                <h3 className="text-xl font-black text-slate-900">Why Canberra Households Choose Us For {service.name}</h3>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {differentiators.map((diff, i) => (
+                    <div key={i} className="flex items-start gap-2 text-xs font-bold text-slate-800 bg-[#f8fafc] p-3.5 rounded-2xl border border-sky-100">
+                      <CheckCircle2 className="w-4 h-4 text-[#0284c7] flex-shrink-0 mt-0.5" />
+                      <span>{diff}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Cleaning Process Steps */}
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-sky-100 shadow-xs space-y-4">
-              <h3 className="text-xl font-black text-slate-900">Our {service.name} Process</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
-                {service.processSteps.map((step, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-[#f8fafc] border border-sky-100 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-[#0284c7] text-white font-black text-xs flex items-center justify-center">
-                        {idx + 1}
-                      </span>
-                      <h4 className="text-sm font-black text-slate-900">{step.title}</h4>
+            {processSteps.length > 0 && (
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-sky-100 shadow-xs space-y-4">
+                <h3 className="text-xl font-black text-slate-900">Our {service.name} Process</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {processSteps.map((step, idx) => (
+                    <div key={idx} className="p-4 rounded-2xl bg-[#f8fafc] border border-sky-100 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-full bg-[#0284c7] text-white font-black text-xs flex items-center justify-center">
+                          {idx + 1}
+                        </span>
+                        <h4 className="text-sm font-black text-slate-900">{step?.title}</h4>
+                      </div>
+                      <p className="text-xs text-slate-600 font-medium pl-8">{step?.desc}</p>
                     </div>
-                    <p className="text-xs text-slate-600 font-medium pl-8">{step.desc}</p>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Pricing Section */}
-            <div className="bg-white p-6 sm:p-8 rounded-3xl border border-sky-100 shadow-xs space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-black text-slate-900">{service.name} Pricing Guide</h3>
-                <span className="text-xs font-black uppercase text-[#0284c7] bg-sky-50 px-3 py-1 rounded-full border border-sky-200">
-                  20% Online Discount Included
-                </span>
-              </div>
+            {pricingNotes.length > 0 && (
+              <div className="bg-white p-6 sm:p-8 rounded-3xl border border-sky-100 shadow-xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-black text-slate-900">{service.name} Pricing Guide</h3>
+                  <span className="text-xs font-black uppercase text-[#0284c7] bg-sky-50 px-3 py-1 rounded-full border border-sky-200">
+                    20% Online Discount Included
+                  </span>
+                </div>
 
-              <div className="space-y-2 text-xs font-semibold text-slate-700">
-                {service.pricingNotes.map((note, idx) => (
-                  <div key={idx} className="p-3 bg-[#f8fafc] rounded-xl border border-sky-100 flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-[#0284c7] flex-shrink-0" />
-                    <span>{note}</span>
-                  </div>
-                ))}
+                <div className="space-y-2 text-xs font-semibold text-slate-700">
+                  {pricingNotes.map((note, idx) => (
+                    <div key={idx} className="p-3 bg-[#f8fafc] rounded-xl border border-sky-100 flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-[#0284c7] flex-shrink-0" />
+                      <span>{note}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Service Areas Paragraph */}
             <div className="bg-white p-6 sm:p-8 rounded-3xl border border-sky-100 shadow-xs space-y-3">
